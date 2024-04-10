@@ -1,0 +1,32 @@
+<?php
+
+namespace Database\Factories;
+
+use App\Models\Shop;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
+
+/**
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Shop>
+ */
+class ShopFactory extends Factory
+{
+
+    /**
+     * Define the model's default state.
+     *
+     * @return array<string, mixed>
+     */
+    public function definition() : array
+    {
+        $userIds = User::pluck('id');
+
+        return [
+            'user_id' => fake()->randomElement($userIds),
+            'name' => fake()->company,
+            'theme' => fake()->word,
+            'biography' => fake()->paragraph,
+        ];
+    }
+}
