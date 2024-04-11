@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Shop;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
@@ -32,7 +34,6 @@ class ShopController extends Controller
     {
         // Validate the incoming request data
         $validator = Validator::make($request->all(), [
-            'user_id' => 'required|uuid',
             'name' => 'required|string',
             'theme' => 'nullable|string',
             'biography' => 'nullable|string',
@@ -47,7 +48,7 @@ class ShopController extends Controller
         $validatedData = $validator->validated();
 
         $shop = new Shop();
-        $shop->user_id = $validatedData['user_id']; // Assign the user_id from the request
+        $shop->user_id = Auth::user()->id; // Assign the user_id from the request
         $shop->name = $validatedData['name'];
         $shop->theme = $validatedData['theme'];
         $shop->biography = $validatedData['biography'];
@@ -65,31 +66,41 @@ class ShopController extends Controller
 
     public function update(Request $request, $id)
     {
-        // Validate incoming request data
-        $validatedData = $request->validate([
-            'user_id' => 'required|string|uuid',
-            'name' => 'required|string',
-            'theme' => 'nullable|string',
-            'biography' => 'nullable|string',
-        ]);
+        if (Gate::allows('update-shop', $request)) {
+            // Validate incoming request data
+            $validatedData = $request->validate([
+                'user_id' => 'required|string|uuid',
+                'name' => 'required|string',
+                'theme' => 'nullable|string',
+                'biography' => 'nullable|string',
+            ]);
 
-        // Find the shop by ID
-        $shop = Shop::find($id);
+            // Find the shop by ID
+            $shop = Shop::find($id);
 
-        // Update the shop attributes
-        $shop->update($validatedData);
+            // Update the shop attributes
+            $shop->update($validatedData);
 
-        return response()->json(['message' => 'Shop updated successfully', 'shop' => $shop], 200);
+            return response()->json(['message' => 'Shop updated successfully', 'shop' => $shop], 200);
+        } else {
+            return 'unauthorized';
+        }
+
     }
 
     public function destroy($id)
     {
-        // Find the shop by ID
-        $shop = Shop::findOrFail($id);
+        if (Gate::allows('delete-shop', $id)) {
 
-        // Delete the shop
-        $shop->delete();
+            // Find the shop by ID
+            $shop = Shop::findOrFail($id);
 
-        return response()->json(['message' => 'Shop deleted successfully'], 200);
+            // Delete the shop
+            $shop->delete();
+
+            return response()->json(['message' => 'Shop deleted successfully'], 200);
+        } else{
+            return 'unauthorized';
+        }
     }
 }

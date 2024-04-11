@@ -1,9 +1,11 @@
 <?php
 
+use App\Http\Controllers\Auth\LoginRegisterController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ShopController;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -21,27 +23,53 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::middleware('guest')->group(function () {
-    Route::get('/product', [ProductController::class, 'index'])->name('product.index');
-    Route::post('/product', [ProductController::class, 'create'])->name('product.create');
-    Route::get('/product/{id}', [ProductController::class, 'show'])->name('product.show');
-    Route::delete('/product/{id}', [ProductController::class, 'destroy'])->name('product.destroy');
-    Route::put('/product/{id}', [ProductController::class, 'update'])->name('product.update');
-    Route::get('/product/search/{name}', [ProductController::class, 'search'])->name('product.search');
-    Route::get('/product/category/{name}', [ProductController::class, 'category'])->name('product.category');
-    Route::get('/product/material/{name}', [ProductController::class, 'material'])->name('product.material');
-    Route::get('/product/color/{name}', [ProductController::class, 'color'])->name('product.color');
-    Route::get('/product/size/{name}', [ProductController::class, 'size'])->name('product.size');
-
-    Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
-    Route::post('/shop', [ShopController::class, 'create'])->name('shop.create');
-    Route::get('/shop/{id}', [ShopController::class, 'show'])->name('shop.show');
-    Route::delete('/shop/{id}', [ShopController::class, 'destroy'])->name('shop.destroy');
-    Route::put('/shop/{id}', [ShopController::class, 'update'])->name('shop.update');
-
-    Route::get('/order', [OrderController::class, 'index'])->name('order.index');
-    Route::post('/order', [OrderController::class, 'create'])->name('order.create');
-    Route::get('/order/{id}', [OrderController::class, 'show'])->name('order.show');
-    Route::delete('/order/{id}', [OrderController::class, 'destroy'])->name('order.destroy');
-    Route::put('/order/{id}', [OrderController::class, 'update'])->name('order.update');
+Route::controller(LoginRegisterController::class)->group(function() {
+    Route::post('/register', 'register');
+    Route::post('/login', 'login');
 });
+
+Route::middleware('auth:sanctum')->group( function () {
+    Route::post('/logout', [LoginRegisterController::class, 'logout']);
+
+    Route::controller(ProductController::class)->group(function() {
+        Route::post('/product', 'create')->name('product.create');
+        Route::delete('/product/{id}', 'destroy')->name('product.destroy');
+        Route::put('/product/{id}', 'update')->name('product.update');
+
+    });
+
+    Route::controller(ShopController::class)->group(function() {
+        Route::post('/shop', 'create')->name('shop.create');
+        Route::delete('/shop/{id}', 'destroy')->name('shop.destroy');
+        Route::put('/shop/{id}', 'update')->name('shop.update');
+    });
+
+    Route::controller(OrderController::class)->group(function() {
+        Route::post('/order', 'create')->name('order.create');
+        Route::delete('/order/{id}', 'destroy')->name('order.destroy');
+        Route::put('/order/{id}', 'update')->name('order.update');
+    });
+});
+
+Route::middleware('guest')->group(function () {
+    Route::controller(ProductController::class)->group(function() {
+        Route::get('/product', 'index')->name('product.index');
+        Route::get('/product/{id}', 'show')->name('product.show');
+        Route::get('/product/search/{name}', 'search')->name('product.search');
+        Route::get('/product/category/{name}', 'category')->name('product.category');
+        Route::get('/product/material/{name}', 'material')->name('product.material');
+        Route::get('/product/color/{name}', 'color')->name('product.color');
+        Route::get('/product/size/{name}', 'size')->name('product.size');
+    });
+
+    Route::controller(ShopController::class)->group(function() {
+        Route::get('/shop', 'index')->name('shop.index');
+        Route::get('/shop/{id}', 'show')->name('shop.show');
+    });
+
+    Route::controller(OrderController::class)->group(function() {
+        Route::get('/order', 'index')->name('order.index');
+        Route::get('/order/{id}', 'show')->name('order.show');
+    });
+});
+
