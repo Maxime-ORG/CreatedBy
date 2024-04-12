@@ -12,9 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('orders', function (Blueprint $table) {
-            $table->foreignUuId('id')->primary();
+            $table->uuid('id')->primary();
+            $table->string('status')->default('pending');
+            $table->foreignUuid('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->float('product_price');
             $table->string('command_number')->unique();
-            $table->timestamp('date')->useCurrent();
+            $table->dateTime('date');
             $table->timestamps();
         });
     }

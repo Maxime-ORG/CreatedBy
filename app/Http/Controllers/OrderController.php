@@ -32,23 +32,13 @@ class OrderController extends Controller
      */
     public function create(Request $request)
     {
-        // Validate the incoming request data
-        $validator = Validator::make($request->all(), [
-            'command_number' => 'required|string|uuid',
-            'date' => 'required|date_format:Y-m-d H:i:s',
-        ]);
 
-        // Check if the validation fails
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 400);
-        }
-
-        // Create a new shop based on validated data
-        $validatedData = $validator->validated();
 
         $order = new Order();
-        $order->command_number = $validatedData['command_number']; // Assign the user_id from the request
-        $order->date = $validatedData['date'];
+        $order->user_id = $request->input('user_id'); // Assign the user_id from the request
+        $order->product_price = $request->input('product_price'); // Assign the user_id from the request
+        $order->command_number = $request->input('command_number'); // Assign the user_id from the request
+        $order->date = $request->input('date');
 
         // Save the shop to the database
         $order->save();

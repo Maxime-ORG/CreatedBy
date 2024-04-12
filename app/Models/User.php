@@ -63,4 +63,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Order::class);
     }
+
+    public function hasOrders(): bool
+    {
+        return $this->orders()->exists();
+    }
 }

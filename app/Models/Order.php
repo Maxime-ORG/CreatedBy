@@ -12,6 +12,7 @@ class Order extends Model
     use HasFactory, Notifiable, HasUuids;
 
     protected $fillable = [
+        'status',
         'command_number',
         'date',
         'product_price'
@@ -20,5 +21,10 @@ class Order extends Model
     public function products()
     {
         return $this->belongsToMany(Product::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

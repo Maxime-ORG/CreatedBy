@@ -35,7 +35,7 @@ Route::middleware('auth:sanctum')->group( function () {
         Route::post('/product', 'create')->name('product.create');
         Route::delete('/product/{id}', 'destroy')->name('product.destroy');
         Route::put('/product/{id}', 'update')->name('product.update');
-
+        Route::post('/product/{id}/add', 'order')->name('product.order');
     });
 
     Route::controller(ShopController::class)->group(function() {

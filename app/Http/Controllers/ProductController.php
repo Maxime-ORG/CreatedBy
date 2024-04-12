@@ -27,43 +27,24 @@ class ProductController extends Controller
      */
     public function create(Request $request)
     {
-        if (Gate::allows('update-product', $request)) {
-                // Validate the incoming request data
-            $validatedData = Validator::make($request->all(), [
-                'shop_id' => 'required|exists:shops,id',
-                'name' => 'required|string',
-                'description' => 'required|string',
-                'story' => 'nullable|string',
-                'price' => 'required|numeric',
-                'quantity' => 'required|integer',
-                'image' => 'nullable|string',
-            ]);
+        // Create a new product instance
+        $product = new Product();
 
-            if ($validatedData->fails()) {
-                return $validatedData->messages();
-            }
+        // Set product attributes
+        $product->id = $request->get('id');
+        $product->shop_id = $request->get('shop_id');
+        $product->name = $request->get('name');
+        $product->description = $request->get('description');
+        $product->story = $request->get('story');
+        $product->price = $request->get('price');
+        $product->quantity = $request->get('quantity');
+        $product->image = $request->get('image');
 
-            // Create a new product instance
-            $product = new Product();
+        // Save the product to the database
+        $product->save();
 
-            // Set product attributes
-            $product->id = $request->get('id');
-            $product->shop_id = $request->get('shop_id');
-            $product->name = $request->get('name');
-            $product->description = $request->get('description');
-            $product->story = $request->get('story');
-            $product->price = $request->get('price');
-            $product->quantity = $request->get('quantity');
-            $product->image = $request->get('image');
-
-            // Save the product to the database
-            $product->save();
-
-            // Return a response indicating success
-            return response()->json(['message' => 'Product created successfully', 'product' => $product], 201);
-        } else {
-            return 'unauthorized';
-        }
+        // Return a response indicating success
+        return response()->json(['message' => 'Product created successfully', 'product' => $product], 201);
     }
 
     /**
@@ -97,50 +78,32 @@ class ProductController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        if (Gate::allows('update-shop', $request)) {
+        try {
+            // Find the product by ID
+            $product = Product::find($id);
 
-            // Validate the incoming request data
-            $validator = Validator::make($request->all(), [
-                'name' => 'required|string',
-                'description' => 'required|string',
-                'price' => 'required|numeric',
-                'quantity' => 'required|integer',
-                'image' => 'nullable|string',
-            ]);
-
-            // If validation fails, return error response
-            if ($validator->fails()) {
-                return response()->json(['error' => $validator->errors()], 400);
+            // If the product doesn't exist, return an error response
+            if (!$product) {
+                return response()->json(['message' => 'Product not found'], 404);
             }
 
-            try {
-                // Find the product by ID
-                $product = Product::find($id);
+            // Update the product attributes
+            $product->name = $request->input('name');
+            $product->description = $request->input('description');
+            $product->price = $request->input('price');
+            $product->quantity = $request->input('quantity');
+            $product->image = $request->input('image');
 
-                // If the product doesn't exist, return an error response
-                if (!$product) {
-                    return response()->json(['message' => 'Product not found'], 404);
-                }
+            // Save the updated product
+            $product->save();
 
-                // Update the product attributes
-                $product->name = $request->input('name');
-                $product->description = $request->input('description');
-                $product->price = $request->input('price');
-                $product->quantity = $request->input('quantity');
-                $product->image = $request->input('image');
-
-                // Save the updated product
-                $product->save();
-
-                return response()->json(['message' => 'Product updated successfully', 'product' => $product], 200);
-            } catch (\Exception $e) {
-                // Log any error that occurs during update
-                Log::error('Error updating product: ' . $e->getMessage());
-                return response()->json(['message' => 'Failed to update product'], 500);
-            }
-        } else {
-            return 'unauthorized';
+            return response()->json(['message' => 'Product updated successfully', 'product' => $product], 200);
+        } catch (\Exception $e) {
+            // Log any error that occurs during update
+            Log::error('Error updating product: ' . $e->getMessage());
+            return response()->json(['message' => 'Failed to update product'], 500);
         }
+
     }
 
 
@@ -212,5 +175,24 @@ class ProductController extends Controller
         })->get();
 
         return $products;
+    }
+
+    public function order(string $id){
+        $product = Product::find($id);
+
+        if (!$product) {
+            return response()->json(['message' => 'Product not found'], 404);
+        }
+
+        $order = new Order();
+        $order->command_number = uniqid();
+        $order->date = now();
+        $order->product_price = $product->price;
+
+        $order->save();
+
+        $order->products()->attach($product);
+
+        return response()->json(['message' => 'Order created successfully', 'order' => $order], 201);
     }
 }
